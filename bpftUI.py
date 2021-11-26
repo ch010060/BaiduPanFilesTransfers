@@ -224,9 +224,13 @@ def main():
     text_input = text_links.get(1.0, END).split('\n')
     link_list = [link for link in text_input if link]
     link_list = [link + ' ' for link in link_list]
+    task_count = 0
+    task_total_count = len(link_list)
     for i, link in enumerate(link_list):
         text_logs.insert(END, f'({i+1}/{len(link_list)})' + '\n')
         _main([link])
+        task_count = task_count + 1
+        label_state_change(state='running', task_count=task_count, task_total_count=task_total_count)
 
 
 # 主程式
@@ -240,8 +244,6 @@ def _main(link_list):
     with open('config.ini', 'w') as config_write:
         config_write.write(cookie + '\n' + user_agent)
 
-    task_count = 0
-    task_total_count = len(link_list)
     bottom_run['state'] = 'disabled'
     bottom_run['relief'] = 'groove'
     bottom_run['text'] = '執行中...'
@@ -360,8 +362,6 @@ def _main(link_list):
                     text_logs.insert(END, '轉存失敗,錯誤程式碼(' + str(transfer_files_reason) + '):' + url_code + '\n')
             elif link_type == 'unknown':
                 text_logs.insert(END, '不支援鏈接:' + url_code + '\n')
-            task_count = task_count + 1
-            label_state_change(state='running', task_count=task_count, task_total_count=task_total_count)
     except Exception as e:
         text_logs.insert(END, '執行出錯,請重新執行本程式.錯誤資訊如下:' + '\n')
         text_logs.insert(END, str(e) + '\n\n')
