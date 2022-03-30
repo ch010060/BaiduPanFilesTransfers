@@ -16,23 +16,17 @@ from retrying import retry
 '''
 軟體名: BaiduPanFilesTransfers
 版本: 1.9
-更新時間: 2021.05.09
+更新時間: 2022.03.30
 打包命令: pyinstaller -F -w -i bpftUI.ico bpftUI.py
 '''
 
 # 實例化TK
 root = Tk()
-
-# 執行時替換圖示
-ICON = zlib.decompress(base64.b64decode('eJxjYGAEQgEBBiDJwZDBysAgxsDAoAHEQCEGBQaIOAg4sDIgACMUj4JRMApGwQgF/ykEAFXxQRc='))
-_, ICON_PATH = tempfile.mkstemp()
-with open(ICON_PATH, 'wb') as icon_file:
-    icon_file.write(ICON)
-root.iconbitmap(default=ICON_PATH)
+root.wm_iconbitmap(bitmap="bpftUI.ico")
 
 # 主視窗配置
 root.wm_title("度盤轉存 2.0 by Alice & Asu & Roger")
-root.wm_geometry('350x473+240+240')
+root.wm_geometry('700x473+240+240')
 root.wm_attributes("-alpha", 0.91)
 root.resizable(width=False, height=False)
 
@@ -49,7 +43,7 @@ entry_folder_name.grid(row=6, column=0, sticky=W, padx=4)
 Label(root, text='4.下面貼上鏈接,每行一個,格式為:鏈接 提取碼.支援秒傳格式.').grid(row=7, sticky=W)
 
 # 鏈接輸入框
-text_links = Text(root, width=48, height=10, wrap=NONE)
+text_links = Text(root, width=96, height=10, wrap=NONE)
 text_links.grid(row=8, column=0, sticky=W, padx=4, )
 scrollbar_links = Scrollbar(root, width=5)
 scrollbar_links.grid(row=8, column=0, sticky=S + N + E, )
@@ -57,7 +51,7 @@ scrollbar_links.configure(command=text_links.yview)
 text_links.configure(yscrollcommand=scrollbar_links.set)
 
 # 日誌輸出框
-text_logs = Text(root, width=48, height=10, wrap=NONE)
+text_logs = Text(root, width=96, height=10, wrap=NONE)
 text_logs.grid(row=10, column=0, sticky=W, padx=4, )
 scrollbar_logs = Scrollbar(root, width=5)
 scrollbar_logs.grid(row=10, column=0, sticky=S + N + E, )
@@ -65,11 +59,13 @@ scrollbar_logs.configure(command=text_logs.yview)
 text_logs.configure(yscrollcommand=scrollbar_logs.set)
 
 # 定義按鈕和狀態標籤
-bottom_run = Button(root, text='4.點選執行', command=lambda: thread_it(main, ), width=10, height=1, relief='solid')
+bottom_run = Button(root, text='5.點選執行', command=lambda: thread_it(main, ), width=10, height=1, relief='solid')
 bottom_run.grid(row=9, pady=6, sticky=W, padx=4)
+bottom_clear = Button(root, text='清空列表', command=lambda: thread_it(clear, ), width=10, height=1, relief='solid')
+bottom_clear.grid(row=9, sticky=E, padx=4)
 label_state = Label(root, text='檢查新版', font=('Arial', 9, 'underline'), foreground="#0000ff", cursor='heart')
-label_state.grid(row=9, sticky=E, padx=4)
-label_state.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/hxz393/BaiduPanFilesTransfers", new=0))
+label_state.grid(row=1, sticky=E, padx=4, pady=4)
+label_state.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/ch010060/BaiduPanFilesTransfers", new=0))
 
 # 讀取配置
 if os.path.exists('config.ini'):
@@ -216,6 +212,15 @@ def thread_it(func, *args):
     t.setDaemon(True)
     t.start()
     # t.join()
+
+
+# 清空列表
+def clear():
+    label_state['text'] = '轉存結果,進度: 0/0'
+    entry_folder_name.delete(0, END)
+    text_links.delete("1.0","end")
+    text_logs.delete("1.0","end")
+
 
 # modified main
 def main():
