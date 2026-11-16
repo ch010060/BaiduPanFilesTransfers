@@ -276,18 +276,22 @@ def main(argv: List[str] | None = None) -> int:
 
     op = CliOperations(root=root, expiry=args.expiry, password=args.password, random_password=args.random_password)
 
+    exit_code = 0
     try:
         if args.command == 'save':
             op.save()
         else:
             op.share()
     except SystemExit:
-        print(f'执行摘要：成功 {op.success_count} / 失败 {op.fail_count}')
-        raise
+        # 输入检查等致命错误会通过 sys.exit() 中断流程，CLI 需以非零退出码告知调用方
+        exit_code = 1
 
     print(f'执行摘要：成功 {op.success_count} / 失败 {op.fail_count}')
 
-    return 0
+    if op.fail_count:
+        exit_code = 1
+
+    return exit_code
 
 
 if __name__ == '__main__':
