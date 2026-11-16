@@ -45,7 +45,7 @@ def write_config(config: str) -> None:
     :param config: 配置文件内容，以换行转义字符 '\n' 拼接多个配置到一行字符串
     :return: 无返回值
     """
-    with open(CONFIG_PATH, 'w') as f:
+    with open(CONFIG_PATH, 'w', encoding='utf-8') as f:
         f.write(config)
 
 
@@ -56,8 +56,8 @@ def read_config() -> Optional[List[str]]:
     :return: 读取成功时返回配置列表，一个元素一个配置。配置文件不存在时返回 None，什么也不会发生
     """
     if os.path.exists(CONFIG_PATH):
-        with open(CONFIG_PATH) as f:
-            config = f.read().splitlines()
+        with open(CONFIG_PATH, encoding='utf-8', errors='replace') as f:
+            config = [line for line in f.read().splitlines() if line and '\ufffd' not in line]
             return config
 
 
