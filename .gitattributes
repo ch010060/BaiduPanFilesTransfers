@@ -1,0 +1,11 @@
+# 統一行尾為 LF，避免不同作業系統造成整檔 diff
+* text=auto eol=lf
+
+# 二進位檔案不做換行轉換
+*.exe binary
+*.ico binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.zip binary
