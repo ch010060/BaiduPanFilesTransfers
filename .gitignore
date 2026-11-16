@@ -1,4 +1,4 @@
-﻿.idea
+.idea
 __pycache__
 build
 dist
@@ -9,3 +9,7 @@ dist
 /test.py
 /BaiduPanFilesTransfers
 .pytest_cache
+cookies.txt
+.serena/
+.omx/
+/*.exe
