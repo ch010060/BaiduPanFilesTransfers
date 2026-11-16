@@ -11,12 +11,14 @@ import time
 import traceback
 from typing import Union, List, Dict, Any
 
+import tkinter as tk
 import ttkbootstrap as ttk
 
 from src.constants import EXP_MAP, DELAY_SECONDS, INVALID_CHARS, ERROR_CODES, SAVE_LIMIT, COLOR_MAP
 from src.network import Network
-from src.ui import CustomDialog
 from src.utils import thread_it, write_config, parse_response, normalize_link, parse_url_and_code, update_cookie, generate_code
+
+TK_END = getattr(ttk, 'END', tk.END)
 
 
 class Operations:
@@ -30,6 +32,18 @@ class Operations:
     def __init__(self, root):
         self.root = root
         self.network = Network()
+        self.success_count = 0
+        self.fail_count = 0
+
+    def _reset_stats(self) -> None:
+        self.success_count = 0
+        self.fail_count = 0
+
+    def _mark_result(self, success: bool) -> None:
+        if success:
+            self.success_count += 1
+        else:
+            self.fail_count += 1
 
     def save(self) -> None:
         """
@@ -41,6 +55,7 @@ class Operations:
         5.批量转存链接。先验证链接有效性，再转存文件，插入结果到日志框。
         """
         try:
+            self._reset_stats()
             self.prepare_run()
             self.setup_save()
             self.handle_input()
@@ -64,7 +79,9 @@ class Operations:
         5.批量分享文件。先向链接框插入文件名，再创建分享，插入结果到日志框。
         """
         try:
+            self._reset_stats()
             # 创建对话框实例，如果对话框没有返回输入值，则忽略
+            from src.ui import CustomDialog
             self.dialog_result = CustomDialog(self.root)
             if self.dialog_result.result:
                 self.prepare_run()
@@ -97,7 +114,7 @@ class Operations:
     def setup_save(self) -> None:
         """准备链接，更新状态"""
         # 从文本链接控件获取全部链接，清洗并标准化链接。注意链接后拼接一个空格，是为了后面能统一处理带与不带提取码的链接
-        raw_links = self.root.text_links.get(1.0, ttk.END).splitlines()
+        raw_links = self.root.text_links.get(1.0, TK_END).splitlines()
         self.link_list = [normalize_link(f'{link} ') for link in raw_links if link]
         self.link_list_org = list(dict.fromkeys(link for link in raw_links if link))
         # 更新任务总数和状态
@@ -164,6 +181,7 @@ class Operations:
         # 跳过非网盘链接
         if 'https://pan.baidu.com/' not in url_code:
             self.insert_logs(f'不支持的链接：{url_code}')
+            self._mark_result(False)
         else:
             # 执行转存过程，通过简单的循环判断是否要暂停
             self.pause_detection(url_code)
@@ -186,8 +204,10 @@ class Operations:
         r = self.network.create_share(info['fs_id'], EXP_MAP[self.expiry], password)
         if isinstance(r, str):
             result = f'分享成功：{r}?pwd={password} {msg}'
+            self._mark_result(True)
         else:
             result = f'分享失败：错误代码（{r}） {msg}'
+            self._mark_result(False)
 
         # 记录日志，更改状态
         self.insert_logs(result)
@@ -200,7 +220,7 @@ class Operations:
             self.root.label_status.config(text='准备就绪！', font=('', 10), bootstyle='primary', cursor="arrow")
             self.root.label_status.unbind("<Button-1>")
             self.root.text_logs.config(fg=COLOR_MAP['text'])
-            self.root.text_logs.delete(1.0, ttk.END)
+            self.root.text_logs.delete(1.0, TK_END)
         elif status == 'running':
             self.running = True
             self.root.bottom_share.config(state="disabled")
@@ -212,7 +232,7 @@ class Operations:
             self.completed_task_count += 1
             self.root.label_status.config(text=f'总进度：{self.completed_task_count}/{self.total_task_count}', bootstyle='success')
         elif status == 'sharing':
-            self.root.text_links.delete(1.0, ttk.END)
+            self.root.text_links.delete(1.0, TK_END)
             self.root.bottom_share.config(state="disabled")
             self.root.bottom_save.config(state="disabled")
         elif status == 'error':
@@ -245,7 +265,7 @@ class Operations:
         """
         text_box = self.root.text_links if alt else self.root.text_logs
         text_box.insert('end', f'{message}\n')
-        text_box.see(ttk.END)
+        text_box.see(TK_END)
 
     def pause_detection(self, url_code: str) -> None:
         """循环检测暂停逻辑，每个转存任务开始时都会检测"""
@@ -289,8 +309,10 @@ class Operations:
         """开启检查模式时，只管判断返回值类型，并输出结果到日志"""
         if isinstance(result, list):
             self.insert_logs(f'链接有效：{url_code} {"目录" if result[4] == ["1"] else "文件"}：{result[3]}')
+            self._mark_result(True)
         else:
             self.insert_logs(f'链接无效：{url_code} 原因：{ERROR_CODES.get(result, f"错误代码（{result}）")}')
+            self._mark_result(False)
 
     def creat_user_dir(self, folder_name: str) -> str:
         """建立用户指定目录，返回完整路径。目录名从原始输入取，函数为 custom_mode 专用"""
@@ -325,3 +347,4 @@ class Operations:
 
         # 最后插入转存结果到日志框
         self.insert_logs(f'{ERROR_CODES.get(result, f"转存失败，错误代码（{result}）")}：{url_code} {file_info}')
+        self._mark_result(result == 0)
