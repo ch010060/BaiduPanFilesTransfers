@@ -98,6 +98,32 @@
 
 # 程序使用
 
+## 命令行版本
+
+```sh
+python BaiduPanFilesTransfersCLI.py save \
+  --cookie-file cookies.txt \
+  --folder "test" \
+  --links "https://pan.baidu.com/s/xxx 1234"
+```
+
+分享目标目录中的文件：
+
+```sh
+python BaiduPanFilesTransfersCLI.py share \
+  --cookie-file cookies.txt \
+  --folder "待下載/" \
+  --expiry "永久" \
+  --password 1234
+```
+
+默认设置：
+- cookie 文件：`cookies.txt`（未传 `--cookie` 时自动读取）
+- 默认下载路径：`待下載/`
+
+支持通过 `--links-file` 导入链接列表（每行一个），或通过 `stdin` 传入链接（仅 save 模式）。
+执行结束时会输出：`执行摘要：成功 X / 失败 Y`。
+
 获取 Cookies 为必须步骤，大多数运行错误都是 Cookies 不正确造成，请仔细阅读获取方法。
 
 ## 获取 Cookies
