@@ -51,7 +51,7 @@ class MainWindow(ttk.Window):
         self.text_links = TextEditor(self).create_text(init_row + 4, LABEL_MAP['links'], LABEL_MAP['links_tip'])
         self.text_logs = TextEditor(self).create_text(init_row + 7, LABEL_MAP['logs'], LABEL_MAP['logs_tip'])
         # 创建选项容器和三个选项复选框
-        self.frame_options = ttk.LabelFrame(self, text=LABEL_MAP['options'], padding="10 10 0 9")
+        self.frame_options = ttk.LabelFrame(self, text=LABEL_MAP['options'])
         self.frame_options.grid(row=init_row + 6, sticky='w', padx=MW_PADDING)
         self.var_trust_env = self._create_checkbutton(LABEL_MAP['trust'], LABEL_MAP['trust_tip'], 0)
         self.var_custom_mode = self._create_checkbutton(LABEL_MAP['custom'], LABEL_MAP['custom_tip'], 1)
